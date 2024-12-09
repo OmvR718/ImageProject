@@ -75,8 +75,9 @@ def browse_file():
 def apply_function(function_name):
     if image_instance:
         function_map = {
-            "Get Histogram": image_instance.get_histogram,
-            "Halftone": image_instance.halftone,
+            "Get Histogram":lambda: image_instance.get_histogram(),
+            "SimpleHalftone":lambda: image_instance.halftone(mode="simple"),
+            "AdvancedHalftone":lambda: image_instance.halftone(mode="advanced"),
             "Sobel": lambda: image_instance.simple(operation="sobel"),
             "Prewitt": lambda: image_instance.simple(operation="prewitt"),
             "Kirsch": lambda: image_instance.kirsch(),
@@ -99,7 +100,8 @@ def apply_function(function_name):
             "Valley": lambda: image_instance.histogram_segmentation(operation="valley"),
             "Peak": lambda: image_instance.histogram_segmentation(operation="peak"),
             "Adaptive": lambda: image_instance.histogram_segmentation("adapt"),
-            "To GrayScale":lambda:image_instance.grayscale_image
+            "To GrayScale":lambda:image_instance.grayscale_image,
+            'Plot Equalized Histogram':lambda:image_instance.plot_equalized_histogram()
         }
         if function_name in function_map:
             result = function_map[function_name]()
@@ -118,11 +120,11 @@ button_frame = ctk.CTkFrame(master=main_frame)
 button_frame.grid(row=2, column=0, columnspan=2, pady=20)
 
 button_names = [
-    "Get Histogram", "Halftone", "Sobel", "Prewitt",
+    "Get Histogram", "Sobel", "Prewitt",
     "Kirsch", "Low-Filter", "High-Filter", "Median Filter", "Range", "Variance", 
     "Difference of Gaussians 7X7", "Difference", "Homogeneity", "Threshold", 
     "To GrayScale", "Contrast Based", "Invert", "Add", "Subtract Image",
-    "Manual", "Valley", "Peak", "Adaptive","Difference of Gaussians 9X9"
+    "Manual", "Valley", "Peak", "Adaptive","Difference of Gaussians 9X9",'Plot Equalized Histogram','SimpleHalftone','AdvancedHalftone'
 ]
 
 # Define the number of columns in the grid

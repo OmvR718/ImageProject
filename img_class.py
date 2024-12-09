@@ -32,38 +32,73 @@ class ImageClass:
         return equalized_image
     
     def thresh_hold(self):
-        
-        threshold = 128  # this value can be adjusted by looking at the histogram
+    # calculate the threshold dynamically as the average of pixel values
+        threshold = np.mean(self.image_array)
+    
+    # Create a binary image based on the calculated threshold
         binary_image = np.where(self.image_array > threshold, 255, 0).astype(np.uint8)
+    
+    # convert the binary image array to a PIL Image
         thresholded_image = Image.fromarray(binary_image)
+    
         return thresholded_image
          
     #turns image into halftoned image
-    def halftone(self):
-        
-        dot_size=10
-        halftone_image = Image.new('L', (self.width, self.height), 255)  # white background
+    def halftone(self, mode='simple'):
+        halftone_image = Image.new('L', (self.width, self.height), 255)
+        dot_size = 10
+        threshold = 128
         draw = ImageDraw.Draw(halftone_image)
-        for y in range(0, self.height, dot_size):
+    
+        if mode == 'simple':
+            for y in range(0, self.height, dot_size):
                 for x in range(0, self.width, dot_size):
                 # extract the block
                     block = self.image_array[y:y+dot_size, x:x+dot_size]
-
-            # calculate the average intensity of the block
+                # calculate the average intensity of the block
                     average_intensity = np.mean(block)
-
-            # map intensity to circle size
+                # use a threshold to determine dot presence
+                    if average_intensity < threshold:
+                        radius = dot_size // 2
+                        center = (x + dot_size // 2, y + dot_size // 2)
+                        draw.ellipse(
+                        [center[0] - radius, center[1] - radius,
+                         center[0] + radius, center[1] + radius],
+                        fill=0  # black dots
+                    )
+    
+        elif mode == 'advanced':
+        # copy the image array to avoid modifying the original
+            image_array = self.image_array.astype(np.float64)  # use float for precise error propagation
+            draw = ImageDraw.Draw(halftone_image)
+            for y in range(0, self.height, dot_size):
+                for x in range(0, self.width, dot_size):
+                # Calculate the current pixel block's intensity
+                    block = image_array[y:y+dot_size, x:x+dot_size]
+                    average_intensity = np.mean(block)
+                # determine the nearest halftone value (0 or 255)
+                    new_value = 0 if average_intensity < 128 else 255
+                # calculate error
+                    error = average_intensity - new_value
+                # update the dot in the halftone image
                     radius = int((255 - average_intensity) / 255 * (dot_size / 2))
-
-            # draw the circle
                     center = (x + dot_size // 2, y + dot_size // 2)
                     draw.ellipse(
-                        [center[0] - radius, center[1] - radius,
-                        center[0] + radius, center[1] + radius],
-                        fill=0 #black dots
-                                            )
+                    [center[0] - radius, center[1] - radius,
+                     center[0] + radius, center[1] + radius],
+                    fill=0 if new_value == 0 else 255
+                )
+                # distribute the error using Floyd-Steinberg coefficients
+                    if x + dot_size < self.width:
+                        image_array[y:y+dot_size, x+dot_size:x+2*dot_size] += error * 7 / 16
+                    if y + dot_size < self.height:
+                        if x > 0:
+                            image_array[y+dot_size:y+2*dot_size, x-dot_size:x] += error * 3 / 16
+                        image_array[y+dot_size:y+2*dot_size, x:x+dot_size] += error * 5 / 16
+                        if x + dot_size < self.width:
+                            image_array[y+dot_size:y+2*dot_size, x+dot_size:x+2*dot_size] += error * 1 / 16
+
         return halftone_image
-            
 
     #this function gets the histogram of the image
     def get_histogram(self):
@@ -82,7 +117,7 @@ class ImageClass:
     # pad the image with zeros on all sides (1 pixel padding)
         padded_image = np.pad(self.image_array, ((1, 1), (1, 1)), mode="constant", constant_values=0)
     
-    # Define the Sobel or Prewitt kernels
+    # define the Sobel or Prewitt kernels
         if operation == 'sobel':
             kernel_x = np.array([[-1, 0, 1],
                              [-1, 0, 1],
@@ -129,7 +164,7 @@ class ImageClass:
     # normalize the magnitude to the range 0-255
         grad_magnitude = (grad_magnitude / grad_magnitude.max()) * 255
 
-    # Convert to uint8 for image representation
+    # convert to uint8 for image representation
         kernelized_image = Image.fromarray(grad_magnitude.astype(np.uint8))
     
         return kernelized_image
@@ -195,15 +230,15 @@ class ImageClass:
         elif operation=="range":
             for y in range(offset, self.height - offset):
                 for x in range(offset, self.width - offset):
-            # Extract the 3x3 local neighborhood (window) around the current pixel
+            # extract the 3x3 local neighborhood (window) around the current pixel
                     window = self.image_array[y - offset:y + offset + 1, x - offset:x + offset + 1]
             
-            # Calculate the range of the window (max - min)
+            # calculate the range of the window (max - min)
                     pixel_range = np.max(window) - np.min(window)
             
-            # Replace the center pixel with the calculated range
+            # replace the center pixel with the calculated range
                     hd_image[y, x] = pixel_range
-    # Convert to uint8 for display (scale the range to the 0-255 range)
+    # convert to uint8 for display (scale the range to the 0-255 range)
         hd_image = np.clip(hd_image, 0, 255).astype(np.uint8)
         hd_image=Image.fromarray(hd_image)
         return hd_image
@@ -261,65 +296,90 @@ class ImageClass:
             inverted_image=Image.fromarray(inverted_array)
             return inverted_image
     #this function either performs the manual, adaptive,histogram valley or histogram technique to detect edges
-    def histogram_segmentation(self,operation):
-        #normalizing image to 0 to 1 [0,1]
-        normailzed_image=self.image_array/255.0
+    def histogram_segmentation(self, operation):
+        # normalizing image to 0 to 1 [0,1]
+        normalized_image = self.image_array / 255.0
         
-        if operation=="manual":
-            #here i am going to set the threshold manually by defing an upper and lower bound they are put by looking at the histogram of the image
-            high_threshold=0.4
-            low_threshold=0.15
-                
-        elif operation=="valley":
+        if operation == "manual":
+            # here I am going to set the threshold manually by defining an upper and lower bound
+            high_threshold = 0.4
+            low_threshold = 0.15
+
+        elif operation == "valley":
             # compute histogram and bin edges
-            hist, bin_edges = np.histogram(normailzed_image, bins=256, range=(0, 1))
-            peaks,_=find_peaks(-hist,prominence=10)
-            valleys=bin_edges[peaks]
-            low_threshold,high_threshold=valleys[:2]
-            
-        elif operation=="peak":
-            hist, bin_edges = np.histogram(normailzed_image, bins=256, range=(0, 1))
-            peaks,_=find_peaks(hist,prominence=10)
-            valleys=bin_edges[peaks]
-            low_threshold,high_threshold=valleys[:2]
-            
-        elif operation=="adapt":
-            tile_size=(8,8)#this is set manually and can be changed depending on the circumstances
+            hist, bin_edges = np.histogram(normalized_image, bins=256, range=(0, 1))
+            peaks, _ = find_peaks(-hist, prominence=10)
+            valleys = bin_edges[peaks]
+            low_threshold, high_threshold = valleys[:2]
+
+        elif operation == "peak":
+            hist, bin_edges = np.histogram(normalized_image, bins=256, range=(0, 1))
+            peaks, _ = find_peaks(hist, prominence=10)
+            valleys = bin_edges[peaks]
+            low_threshold, high_threshold = valleys[:2]
+
+        elif operation == "adapt":
+            tile_size = (8, 8)  # this is set manually and can be changed depending on the circumstances
             tile_height, tile_width = tile_size
             tiles_y = self.height // tile_height
             tiles_x = self.width // tile_width
-            segmented_image=np.zeros_like(self.image_array)
+            segmented_image = np.zeros_like(self.image_array)
             
             for i in range(tiles_y):
-                
                 for j in range(tiles_x):
-                    y_start=i*tile_height
-                    y_end=(i+1)*tile_height
-                    x_start=j*tile_width
-                    x_end=(j+1)*tile_width
+                    y_start = i * tile_height
+                    y_end = (i + 1) * tile_height
+                    x_start = j * tile_width
+                    x_end = (j + 1) * tile_width
                     tile = self.image_array[y_start:y_end, x_start:x_end]
                     tile_eq = self.histogram_equalization(tile)
                     segmented_image[y_start:y_end, x_start:x_end] = tile_eq
-            segmented_image=Image.fromarray(segmented_image)
-            
-        fig,ax=plt.subplots(figsize=(10,10))
-        ax.hist(normailzed_image.flat,bins=80,range=(0,1),color="gray")
-        ax.set_title("Histogram of a gray scale image")
+            segmented_image = Image.fromarray(segmented_image)
+            return segmented_image
+
+        # Segmenting image based on thresholds
+        region_1 = (normalized_image <= low_threshold)  # dark regions
+        region_2 = (normalized_image > high_threshold)  # bright regions
+        region_3 = (normalized_image > low_threshold) & (normalized_image <= high_threshold)  # intermediate region
+
+        # Initialize segmented image
+        segmented_image = np.zeros_like(self.image_array)
+
+        # Assign pixel values based on the region
+        segmented_image[region_1] = 0   # Dark regions (black)
+        segmented_image[region_2] = 255 # Bright regions (white)
+        segmented_image[region_3] = 128 # Intermediate regions (gray)
+
+        segmented_image = Image.fromarray(segmented_image)
+    
+        return segmented_image
+    def plot_equalized_histogram(self):
+        # Flatten the image to get pixel values
+        pixel_value = self.image_array.flatten()
+
+        # Perform histogram equalization
+        hist, bin_edges = np.histogram(pixel_value, bins=256, range=(0, 256))
+        
+        # Calculate the cumulative distribution function (CDF)
+        cdf = np.cumsum(hist)
+        
+        # Normalize the CDF to be between 0 and 255
+        cdf_normalized = (cdf - cdf.min()) * 255 / (cdf.max() - cdf.min())
+        
+        # Map original pixel values to the equalized pixel values
+        equalized_image = np.interp(self.image_array.flatten(), bin_edges[:-1], cdf_normalized)
+        
+        # Reshape the flattened array back into the original image shape
+        equalized_image = equalized_image.reshape(self.image_array.shape)
+
+        # Create the histogram of the equalized image
+        fig, ax = plt.subplots()
+        ax.hist(equalized_image.flatten(), bins=256, range=(0, 256), color='gray', alpha=0.7)
+        ax.set_title("Equalized Grayscale Histogram")
         ax.set_xlabel("Intensity")
         ax.set_ylabel("Frequency")
         
-        if operation !="adapt":
-            segmented_image=np.zeros_like(self.image_array) #initalize blank image
-        #we will define 3 regions the high threshold and low threshlod and what is in between
-            region_1=(normailzed_image<=low_threshold)#dark regions
-            region_2=(normailzed_image>high_threshold)#bright region
-            region_3 = (normailzed_image > low_threshold) & (self.image_array <= high_threshold)#grayish region
-        #assigning a value to each one coressponding to the correct region
-            segmented_image[region_1]=0
-            segmented_image[region_2]=255
-            segmented_image[region_3]=128
-            segmented_image=Image.fromarray(segmented_image)#scaling back to the 0 to 255 [0,255] range
-        return segmented_image
+        return fig
     
     def kirsch(self):
         #kirsch compass masks
@@ -354,7 +414,7 @@ class ImageClass:
 #normalize edge intensity to [0, 255]
         edge_intensity = np.clip((edge_intensity / edge_intensity.max()) * 255, 0, 255).astype(np.uint8)
         edge_intensity=Image.fromarray(edge_intensity)
-        return edge_direction,edge_intensity
+        return edge_intensity
     #level controls the mask if it is 7X7 or 9X9
     def DoG(self,level):
         if level==7: 
