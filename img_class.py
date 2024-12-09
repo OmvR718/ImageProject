@@ -176,21 +176,22 @@ class ImageClass:
         window_size=3
         offset = window_size // 2
         hd_image = np.zeros_like(self.image_array)
-        if operation=='homo':
+        if operation == 'homo':
             for y in range(offset, self.height - offset):
                 for x in range(offset, self.width - offset):
-            # extract the local neighborhood (window) around the current pixel
+            # Extract the local neighborhood
                     window = self.image_array[y - offset:y + offset + 1, x - offset:x + offset + 1]
-                    
-            #local variance (contrast)
-                    variance = np.var(window)
-                    contrast = np.sqrt(variance)
-                    
-            #inverse of contrast
-                    homogeneity = 1 / (contrast + 1e-5)  # Add small epsilon to avoid division by zero
-                    
-            #the homogeneity value to the output
-                    hd_image[y, x] = homogeneity * 255  # Scale to 0-255 for display
+            
+            # Calculate the absolute differences between the center pixel and neighbors
+                    center_pixel = self.image_array[y, x]
+                    differences = np.abs(window - center_pixel)
+            
+            # Find the maximum difference
+                    max_difference = np.max(differences)
+            
+            # Assign the scaled value to the output image
+                    hd_image[y, x] = max_difference
+
                     
     # normalize
             hd_image = np.uint8(hd_image / np.max(hd_image) * 255)
@@ -416,44 +417,52 @@ class ImageClass:
         edge_intensity=Image.fromarray(edge_intensity)
         return edge_intensity
     #level controls the mask if it is 7X7 or 9X9
-    def DoG(self,level):
-        if level==7: 
-            #defining the 7X7 kernel
-            kernel=np.array([[0,0,-1,-1,-1,0,0],
-                            [0,-2,-3,-3,-3,-2,0],
-                            [-1,-3,5,5,5,-3,-1],
-                            [-1,-3,5,16,5,-3,-1],
-                            [-1,-3,5,5,5,-3,-1],
-                            [0,-2,-3,-3,-3,-2,0],
-                            [0,0,-1,-1,-1,0,0]],dtype=np.float32
-                            )
-        elif level==9:
-            #defining the 9X9 kernel
-            kernel=np.array([[0,0,0,-1,-1,-1,0,0,0],
-                            [0,-2,-3,-3,-3,-3,-3,-2,0],
-                            [0,-3,-2,-1,-1,-1,-2,-3,0],
-                            [-1,-3,-1,9,9,9,-1,-3,-1],
-                            [-1,-3,-1,9,19,9,-1,-3,-1],
-                            [-1,-3,-1,9,9,9,-1,-3,-1],
-                            [0,-3,-2,-1,-1,-1,-2,-3,0],
-                            [0,-2,-3,-3,-3,-3,-3,-2,0],
-                            [0,0,0,-1,-1,-1,0,0,0]],dtype=np.float32
-                            )
-        #get the kernel height and width
-        k_height,k_width=kernel.shape
-        #defining the pad height and width
-        pad_h=k_height//2
-        pad_w=k_width//2
-        padded_image=np.pad(self.image_array,((pad_h,pad_h),(pad_w,pad_w)),mode="constant",constant_values=0)
-        output=np.zeros_like(self.image_array,dtype=np.uint8)
-        #iterate over height
+    def DoG(self, level):
+    # Define the kernels based on the level
+        if level == 7:
+            kernel = np.array([[0, 0, -1, -1, -1, 0, 0],
+                           [0, -2, -3, -3, -3, -2, 0],
+                           [-1, -3, 5, 5, 5, -3, -1],
+                           [-1, -3, 5, 16, 5, -3, -1],
+                           [-1, -3, 5, 5, 5, -3, -1],
+                           [0, -2, -3, -3, -3, -2, 0],
+                           [0, 0, -1, -1, -1, 0, 0]], dtype=np.float32)
+        elif level == 9:
+            kernel = np.array([[0, 0, 0, -1, -1, -1, 0, 0, 0],
+                           [0, -2, -3, -3, -3, -3, -3, -2, 0],
+                           [0, -3, -2, -1, -1, -1, -2, -3, 0],
+                           [-1, -3, -1, 9, 9, 9, -1, -3, -1],
+                           [-1, -3, -1, 9, 19, 9, -1, -3, -1],
+                           [-1, -3, -1, 9, 9, 9, -1, -3, -1],
+                           [0, -3, -2, -1, -1, -1, -2, -3, 0],
+                           [0, -2, -3, -3, -3, -3, -3, -2, 0],
+                           [0, 0, 0, -1, -1, -1, 0, 0, 0]], dtype=np.float32)
+    
+    # Get kernel height and width
+        k_height, k_width = kernel.shape
+    
+    # Define the pad height and width
+        pad_h = k_height // 2
+        pad_w = k_width // 2
+    
+    # Pad the image
+        padded_image = np.pad(self.image_array, ((pad_h, pad_h), (pad_w, pad_w)), mode="constant", constant_values=0)
+    
+    # Prepare the output image
+        output = np.zeros_like(self.image_array, dtype=np.float32)
+    
+    # Perform convolution
         for i in range(self.height):
-            #iterate over width
             for j in range(self.width):
-                region=padded_image[i:i + k_height, j:j + k_width]
+                region = padded_image[i:i + k_height, j:j + k_width]
                 output[i, j] = np.sum(region * kernel)
-        output = Image.fromarray(output)
-        return output
+    
+    # Normalize the result to 0-255 range
+        output = np.clip(output, 0, 255)  # Ensure values are within the 0-255 range
+        output = output.astype(np.uint8)
+    
+    # Convert to PIL Image and return
+        return Image.fromarray(output)
     
     def contrast_based(self):
         smoothing_mask=np.array([[1,1,1],
