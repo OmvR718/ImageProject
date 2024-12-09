@@ -1,10 +1,12 @@
 **Image Processing App**
 **📖 Overview**
+
 The Image Processing App is a powerful yet easy-to-use application built using Python’s renowned libraries such as NumPy, Matplotlib, Pillow (PIL), and SciPy. This project is designed to provide a user-friendly interface for performing various image processing operations, including edge detection, filtering, segmentation, and more.
 
 Whether you are a beginner learning the basics of image processing or an advanced user looking for a quick way to process images, this app offers a wide range of tools to simplify your workflow.
 
 **✨ Features**
+
 Image Analysis
 Get Histogram: Visualize the distribution of pixel intensities.
 Grayscale Conversion: Convert images to grayscale for basic processing.
@@ -26,7 +28,8 @@ Miscellaneous Operations
 Invert Colors: Create negative images.
 Add/Subtract Images: Combine or compare images pixel-by-pixel.
 Homogeneity Analysis: Compute texture uniformity.
-💻 Technologies Used
+
+**💻 Technologies Used**
 The application is built using:
 
 CustomTkinter: For creating a modern and responsive GUI.
