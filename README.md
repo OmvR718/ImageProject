@@ -46,7 +46,6 @@ Launch the application by running python app.py.
 Click the Browse File button to load an image.
 Choose an operation from the available buttons to apply to the image.
 The processed image or result will appear in the adjacent panel.
-**📈 Demo**
 
 **🚀 Future Improvements**
 
