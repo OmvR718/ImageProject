@@ -37,7 +37,9 @@ Pillow (PIL): For image loading and manipulation.
 NumPy: For numerical computations on image data.
 Matplotlib: For visualizing histograms and other graphical results.
 SciPy: For advanced filtering and edge-detection algorithms.
+
 **📂 Installation**
+
 Clone the repository:
 **🛠️ How to Use**
 Launch the application by running python app.py.
