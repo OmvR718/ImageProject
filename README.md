@@ -49,12 +49,15 @@ The processed image or result will appear in the adjacent panel.
 **📈 Demo**
 
 **🚀 Future Improvements**
+
 Add support for batch processing.
 Include advanced segmentation methods like watershed and k-means clustering.
 Implement more filters, such as Gaussian Blur and Bilateral Filtering.
 Integrate Machine Learning models for image classification and segmentation.
 Export processed images in multiple formats.
+
 **🤝 Contributing**
+
 **I welcome contributions! To contribute:**
 
 Fork the repository.
@@ -63,6 +66,7 @@ Commit your changes and push the branch.
 Submit a pull request explaining your changes.
 
 **🙋‍♂️ Acknowledgements**
+
 Special thanks to:
 
 Python Open Source Community for the amazing libraries.
