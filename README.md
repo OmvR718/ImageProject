@@ -36,21 +36,6 @@ Matplotlib: For visualizing histograms and other graphical results.
 SciPy: For advanced filtering and edge-detection algorithms.
 **📂 Installation**
 Clone the repository:
-
-bash
-Copy code
-git clone https://github.com/your-username/image-processing-app.git
-cd image-processing-app
-Install dependencies: Make sure you have Python 3.7 or higher installed. Then install the required libraries:
-
-bash
-Copy code
-pip install -r requirements.txt
-Run the application:
-
-bash
-Copy code
-python app.py
 **🛠️ How to Use**
 Launch the application by running python app.py.
 Click the Browse File button to load an image.
@@ -71,8 +56,6 @@ Fork the repository.
 Create a new branch for your feature/bug fix.
 Commit your changes and push the branch.
 Submit a pull request explaining your changes.
-**📜 License**
-This project is licensed under the MIT License.
 
 **🙋‍♂️ Acknowledgements**
 Special thanks to:
