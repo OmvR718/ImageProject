@@ -1,10 +1,10 @@
-Image Processing App
-📖 Overview
+**Image Processing App**
+**📖 Overview**
 The Image Processing App is a powerful yet easy-to-use application built using Python’s renowned libraries such as NumPy, Matplotlib, Pillow (PIL), and SciPy. This project is designed to provide a user-friendly interface for performing various image processing operations, including edge detection, filtering, segmentation, and more.
 
 Whether you are a beginner learning the basics of image processing or an advanced user looking for a quick way to process images, this app offers a wide range of tools to simplify your workflow.
 
-✨ Features
+**✨ Features**
 Image Analysis
 Get Histogram: Visualize the distribution of pixel intensities.
 Grayscale Conversion: Convert images to grayscale for basic processing.
@@ -34,7 +34,7 @@ Pillow (PIL): For image loading and manipulation.
 NumPy: For numerical computations on image data.
 Matplotlib: For visualizing histograms and other graphical results.
 SciPy: For advanced filtering and edge-detection algorithms.
-📂 Installation
+**📂 Installation**
 Clone the repository:
 
 bash
@@ -51,30 +51,30 @@ Run the application:
 bash
 Copy code
 python app.py
-🛠️ How to Use
+**🛠️ How to Use**
 Launch the application by running python app.py.
 Click the Browse File button to load an image.
 Choose an operation from the available buttons to apply to the image.
 The processed image or result will appear in the adjacent panel.
-📈 Demo
+**📈 Demo**
 
-🚀 Future Improvements
+**🚀 Future Improvements**
 Add support for batch processing.
 Include advanced segmentation methods like watershed and k-means clustering.
 Implement more filters, such as Gaussian Blur and Bilateral Filtering.
 Integrate Machine Learning models for image classification and segmentation.
 Export processed images in multiple formats.
-🤝 Contributing
-We welcome contributions! To contribute:
+**🤝 Contributing**
+**I welcome contributions! To contribute:**
 
 Fork the repository.
 Create a new branch for your feature/bug fix.
 Commit your changes and push the branch.
 Submit a pull request explaining your changes.
-📜 License
+**📜 License**
 This project is licensed under the MIT License.
 
-🙋‍♂️ Acknowledgements
+**🙋‍♂️ Acknowledgements**
 Special thanks to:
 
 Python Open Source Community for the amazing libraries.
